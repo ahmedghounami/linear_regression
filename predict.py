@@ -71,6 +71,29 @@ def main():
             f"{estimated_price:.2f}"
         )
 
+        predicted = theta0 + theta1 * mileage
+
+        plt.figure(figsize=(8, 6))
+
+        plt.scatter(
+            mileage,
+            y,
+            label="Data points",
+        )
+
+        plt.plot(
+            mileage,
+            predicted,
+            label="Regression line"
+        )
+
+        plt.xlabel("Mileage (km)")
+        plt.ylabel("Price")
+        plt.title("Linear Regression")
+        plt.legend()
+        plt.grid()
+        plt.show()
+
     except ValueError as error:
         print(f"Error: {error}")
 

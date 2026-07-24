@@ -1,159 +1,168 @@
 #!/usr/bin/env python3
 
-import csv
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 
 
 DATA_FILE = "data.csv"
-THETAS_FILE = "thetas.csv"
 
-LEARNING_RATE = 1e-12
-ITERATIONS = 2
-
-def load_data(filename):
-    mileages = []
-    prices = []
-
-    with open(filename, "r", newline="") as file:
-        reader = csv.DictReader(file)
-
-        if reader.fieldnames is None:
-            raise ValueError("The dataset has no header")
-
-        if "km" not in reader.fieldnames:
-            raise ValueError("The dataset must contain a 'km' column")
-
-        if "price" not in reader.fieldnames:
-            raise ValueError("The dataset must contain a 'price' column")
-
-        for row in reader:
-            mileage = float(row["km"])
-            price = float(row["price"])
-
-            mileages.append(mileage)
-            prices.append(price)
-
-    if len(mileages) == 0:
-        raise ValueError("The dataset is empty")
-
-    return mileages, prices
-
-
-def estimate_price(mileage, theta0, theta1):
-    return theta0 + theta1 * mileage
-
-
-def loss_function(mileages, prices, theta0, theta1):
-    total_loss = 0.0
-    m = len(mileages)
-
-    for i in range(m):
-        prediction = estimate_price(
-            mileages[i],
-            theta0,
-            theta1
-        )
-
-        error = prediction - prices[i]
-        total_loss += error ** 2
-
-    return total_loss / m
+LEARNING_RATE = 0.1
+ITERATIONS = 10000
+PRINT_INTERVAL = 1000
 
 
 def gradient_descent(
-    mileages,
-    prices,
+    x,
+    y,
     theta0,
     theta1,
-    learning_rate
+    learning_rate,
+    iterations
 ):
-    m = len(mileages)
+    n = len(y)
 
-    theta0_gradient = 0.0
-    theta1_gradient = 0.0
+    for iteration in range(iterations):
 
-    for i in range(m):
-        prediction = estimate_price(
-            mileages[i],
-            theta0,
-            theta1
-        )
+        y_pred = theta0 + theta1 * x
 
-        error = prediction - prices[i]
-        print(f"Prediction: {prediction}, Actual: {prices[i]}, Error: {error}")
-        theta0_gradient += error
-        theta1_gradient += error * mileages[i]
-        print(f"theta0_gradient: {theta0_gradient}, theta1_gradient: {theta1_gradient}")
+        errors = y_pred - y
+        
 
-    tmp_theta0 = learning_rate * theta0_gradient / m
-    tmp_theta1 = learning_rate * theta1_gradient / m
+        errors_times_x = errors * x
 
-    new_theta0 = theta0 - tmp_theta0
-    new_theta1 = theta1 - tmp_theta1
+        sum_errors_times_x = np.sum(errors_times_x)
+
+
+        da = (1 / n) * sum_errors_times_x
+
+
+        sum_errors = np.sum(errors)
+
+
+        db = (1 / n) * sum_errors
+
+
+        movement_theta0 = learning_rate * db
+
+        movement_theta1 = learning_rate * da
+
+
+        theta0 = theta0 - movement_theta0
+
+        theta1 = theta1 - movement_theta1
+
+        if iteration % PRINT_INTERVAL == 0:
+
+
+            squared_errors = errors ** 2
+
     
-    return new_theta0, new_theta1
+            sum_squared_errors = np.sum(squared_errors)
 
+            loss = sum_squared_errors / n
 
-def save_thetas(filename, theta0, theta1):
-    with open(filename, "w", newline="") as file:
-        writer = csv.writer(file)
+            print(
+                f"Iteration {iteration}: "
+                f"loss = {loss:.6f}, "
+                f"theta0 = {theta0:.6f}, "
+                f"theta1 = {theta1:.6f}"
+            )
 
-        writer.writerow(["theta0", "theta1"])
-        writer.writerow([theta0, theta1])
+    return theta0, theta1
 
 
 def main():
+    print("Gradient descent — simple linear regression")
+
     try:
-        mileages, prices = load_data(DATA_FILE)
+       
+        df = pd.read_csv(DATA_FILE)
 
-        theta0 = 0.0
-        theta1 = 0.0
-
-        for iteration in range(ITERATIONS):
-            theta0, theta1 = gradient_descent(
-                mileages,
-                prices,
-                theta0,
-                theta1,
-                LEARNING_RATE
+        if "km" not in df.columns:
+            raise ValueError(
+                "The dataset must contain a 'km' column"
             )
 
-            current_loss = loss_function(
-                mileages,
-                prices,
-                theta0,
-                theta1
+        if "price" not in df.columns:
+            raise ValueError(
+                "The dataset must contain a 'price' column"
             )
-            # print(f"Iteration {iteration}: Loss = {current_loss}, theta0 = {theta0}, theta1 = {theta1}")
 
-            if iteration % 10000 == 0:
-                print(
-                    f"Iteration {iteration}: "
-                    f"Loss = {current_loss}, "
-                    f"theta0 = {theta0}, "
-                    f"theta1 = {theta1}"
-                )
+        if df.empty:
+            raise ValueError("The dataset is empty")
 
-        save_thetas(
-            THETAS_FILE,
-            theta0,
-            theta1
+      
+        mileage = df["km"].to_numpy(dtype=float)
+        y = df["price"].to_numpy(dtype=float)
+
+        if not np.all(np.isfinite(mileage)):
+            raise ValueError(
+                "The 'km' column contains invalid values"
+            )
+
+        if not np.all(np.isfinite(y)):
+            raise ValueError(
+                "The 'price' column contains invalid values"
+            )
+
+        mileage_min = np.min(mileage)
+
+   
+        mileage_max = np.max(mileage)
+
+        mileage_range = mileage_max - mileage_min
+
+        if mileage_range == 0:
+            raise ValueError(
+                "All mileage values are identical"
+            )
+
+     
+        mileage_normalized = (mileage - mileage_min) / mileage_range
+
+        normalized_theta0 = 0.0
+        normalized_theta1 = 0.0
+
+        normalized_theta0, normalized_theta1 = gradient_descent(
+            mileage_normalized,
+            y,
+            normalized_theta0,
+            normalized_theta1,
+            LEARNING_RATE,
+            ITERATIONS
         )
 
-        print("\nTraining completed.")
-        print(f"theta0 = {theta0}")
-        print(f"theta1 = {theta1}")
-        print(f"Parameters saved in '{THETAS_FILE}'.")
+        theta1 = normalized_theta1 / mileage_range
 
+        theta0 = (
+            normalized_theta0 - (normalized_theta1 * mileage_min / mileage_range)
+        )
+
+        
+
+        
+        with open("thetas.csv", "w") as file:
+            file.write(f"theta0,theta1\n")
+            file.write(f"{theta0},{theta1}\n")
+
+        print("\nTraining completed")
+
+        print("\nOriginal-scale model:")
+        print("estimated_price = theta0 + (theta1 * mileage)")
+
+        print(f"\ntheta0 = {theta0}")
+        print(f"theta1 = {theta1}")
     except FileNotFoundError:
-        print(f"Error: '{DATA_FILE}' was not found.")
+        print(f"Error: '{DATA_FILE}' was not found")
 
     except PermissionError:
-        print("Error: permission denied.")
+        print(
+            f"Error: permission denied while reading "
+            f"'{DATA_FILE}'"
+        )
 
-    except (ValueError, KeyError) as error:
-        print(f"Error: invalid dataset: {error}")
-
-    except OSError as error:
+    except (ValueError, TypeError) as error:
         print(f"Error: {error}")
 
 
