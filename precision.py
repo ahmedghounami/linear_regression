@@ -12,7 +12,6 @@ THETAS_FILE = "thetas.csv"
 
 def main():
     try:
-        # Read the original dataset.
         data = pd.read_csv(DATA_FILE)
 
         if "km" not in data.columns or "price" not in data.columns:
@@ -23,7 +22,6 @@ def main():
         mileage = data["km"].to_numpy(dtype=float)
         real_prices = data["price"].to_numpy(dtype=float)
 
-        # Read theta0 and theta1 produced by train.py.
         thetas = pd.read_csv(THETAS_FILE)
 
         if "theta0" not in thetas.columns or "theta1" not in thetas.columns:
@@ -34,20 +32,15 @@ def main():
         theta0 = float(thetas["theta0"].iloc[0])
         theta1 = float(thetas["theta1"].iloc[0])
 
-        # Predict the price of every car.
         predicted_prices = theta0 + theta1 * mileage
 
-        # Calculate the difference between predictions and real prices.
         errors = predicted_prices - real_prices
 
-        # Mean Absolute Error.
-        mae = np.mean(np.abs(errors))
+        mae = np.mean(np.abs(errors)) # mean absolute error
 
-        # Mean Squared Error.
-        mse = np.mean(errors ** 2)
+        mse = np.mean(errors ** 2) # mean squared error
 
-        # Root Mean Squared Error.
-        rmse = np.sqrt(mse)
+        rmse = np.sqrt(mse) # root mean squared error
 
         print(f"Theta0: {theta0}")
         print(f"Theta1: {theta1}")

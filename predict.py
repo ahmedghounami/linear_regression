@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
 import csv
-
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 
 THETAS_FILE = "thetas.csv"
 
@@ -11,12 +13,12 @@ def estimate_price(mileage, theta0, theta1):
 
 
 def load_thetas(filename):
-    theta0 = 0.0
-    theta1 = 0.0
+    theta0 = -1.0
+    theta1 = -1.0
 
     try:
-        with open(filename, "r", newline="") as file:
-            reader = csv.DictReader(file)
+        with open(filename, "r", newline="") as file: 
+            reader = csv.DictReader(file) # reader is 
             row = next(reader, None)
 
             if row is None:
@@ -26,7 +28,6 @@ def load_thetas(filename):
             theta1 = float(row["theta1"])
 
     except FileNotFoundError:
-        # Before training, both values must be zero.
         pass
 
     except (ValueError, KeyError):
@@ -35,8 +36,8 @@ def load_thetas(filename):
             "Using theta0 = 0 and theta1 = 0."
         )
 
-        theta0 = 0.0
-        theta1 = 0.0
+        theta0 = -1.0
+        theta1 = -1.0
 
     return theta0, theta1
 
@@ -54,14 +55,21 @@ def read_mileage():
 
 def main():
     try:
-        mileage = read_mileage()
-
         theta0, theta1 = load_thetas(
             THETAS_FILE
         )
+        if theta0 == -1.0 and theta1 == -1.0:
+            print(
+                "Warning: theta0 and theta1 are not initialized. "
+                "The model may not be trained yet."
+            )
+            return
+
+        mileage_X = read_mileage()
+
 
         estimated_price = estimate_price(
-            mileage,
+            mileage_X,
             theta0,
             theta1
         )
@@ -71,28 +79,46 @@ def main():
             f"{estimated_price:.2f}"
         )
 
-        predicted = theta0 + theta1 * mileage
+        
+        df = pd.read_csv("data.csv")
 
-        plt.figure(figsize=(8, 6))
+        if "km" not in df.columns:
+            raise ValueError(
+                "The dataset must contain a 'km' column"
+            )
 
+        if "price" not in df.columns:
+            raise ValueError(
+                "The dataset must contain a 'price' column"
+            )
+
+        if df.empty:
+            raise ValueError("The dataset is empty")
+
+      
+        mileage = df["km"].to_numpy(dtype=float)
+        y = df["price"].to_numpy(dtype=float)
+
+        predected = theta0 + theta1 * mileage
+
+        plt.figure(figsize=(12, 8)) # 8
         plt.scatter(
             mileage,
             y,
             label="Data points",
         )
-
         plt.plot(
             mileage,
-            predicted,
+            predected,
             label="Regression line"
         )
-
         plt.xlabel("Mileage (km)")
         plt.ylabel("Price")
         plt.title("Linear Regression")
         plt.legend()
         plt.grid()
         plt.show()
+        
 
     except ValueError as error:
         print(f"Error: {error}")

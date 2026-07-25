@@ -2,13 +2,12 @@
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
 
 DATA_FILE = "data.csv"
 
 LEARNING_RATE = 0.1
-ITERATIONS = 10000
+ITERATIONS = 100000
 PRINT_INTERVAL = 1000
 
 
@@ -51,23 +50,6 @@ def gradient_descent(
         theta0 = theta0 - movement_theta0
 
         theta1 = theta1 - movement_theta1
-
-        if iteration % PRINT_INTERVAL == 0:
-
-
-            squared_errors = errors ** 2
-
-    
-            sum_squared_errors = np.sum(squared_errors)
-
-            loss = sum_squared_errors / n
-
-            print(
-                f"Iteration {iteration}: "
-                f"loss = {loss:.6f}, "
-                f"theta0 = {theta0:.6f}, "
-                f"theta1 = {theta1:.6f}"
-            )
 
     return theta0, theta1
 
@@ -140,16 +122,11 @@ def main():
         )
 
         
-
-        
         with open("thetas.csv", "w") as file:
             file.write(f"theta0,theta1\n")
             file.write(f"{theta0},{theta1}\n")
 
         print("\nTraining completed")
-
-        print("\nOriginal-scale model:")
-        print("estimated_price = theta0 + (theta1 * mileage)")
 
         print(f"\ntheta0 = {theta0}")
         print(f"theta1 = {theta1}")
