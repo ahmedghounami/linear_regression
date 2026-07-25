@@ -13,8 +13,8 @@ def estimate_price(mileage, theta0, theta1):
 
 
 def load_thetas(filename):
-    theta0 = -1.0
-    theta1 = -1.0
+    theta0 = 0.0
+    theta1 = 0.0
 
     try:
         with open(filename, "r", newline="") as file: 
@@ -36,8 +36,8 @@ def load_thetas(filename):
             "Using theta0 = 0 and theta1 = 0."
         )
 
-        theta0 = -1.0
-        theta1 = -1.0
+        theta0 = 0.0
+        theta1 = 0.0
 
     return theta0, theta1
 
@@ -58,13 +58,6 @@ def main():
         theta0, theta1 = load_thetas(
             THETAS_FILE
         )
-        if theta0 == -1.0 and theta1 == -1.0:
-            print(
-                "Warning: theta0 and theta1 are not initialized. "
-                "The model may not be trained yet."
-            )
-            return
-
         mileage_X = read_mileage()
 
 
